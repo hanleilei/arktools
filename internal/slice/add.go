@@ -14,13 +14,27 @@
 
 package slice
 
-import (
-	"github.com/hanleilei/arktools/internal/slice"
-)
+import "github.com/hanleilei/arktools/internal/errs"
 
 // Add 在切片的指定位置插入一个元素，并返回新的切片
 // 如果 index 超出范围（< 0 或 > len(src)），返回错误
-func Add[Src any](src []Src, element Src, index int) ([]Src, error) {
-	res, err := slice.Add[Src](src, element, index)
-	return res, err
+func Add[T any](src []T, element T, index int) ([]T, error) {
+	length := len(src)
+	if index < 0 || index > length {
+		return nil, errs.NewErrIndexOutOfRange(length, index)
+	}
+
+	// 创建新切片，容量为 length+1
+	result := make([]T, length+1)
+
+	// 复制 index 之前的元素
+	copy(result[:index], src[:index])
+
+	// 插入新元素
+	result[index] = element
+
+	// 复制 index 之后的元素
+	copy(result[index+1:], src[index:])
+
+	return result, nil
 }
