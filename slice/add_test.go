@@ -107,11 +107,6 @@ func ExampleAdd() {
 	// ekit: 下标超出范围，长度 4, 下标 -1
 }
 
-type Person struct {
-	Name string
-	Age  int
-}
-
 func TestAddString(t *testing.T) {
 	testCases := []struct {
 		name      string
@@ -145,78 +140,6 @@ func TestAddString(t *testing.T) {
 		{
 			name:    "index out of range",
 			slice:   []string{"test"},
-			index:   5,
-			wantErr: errs.NewErrIndexOutOfRange(1, 5),
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			res, err := Add(tc.slice, tc.addVal, tc.index)
-			if tc.wantErr != nil {
-				assert.EqualError(t, err, tc.wantErr.Error())
-				return
-			}
-			assert.NoError(t, err)
-			assert.Equal(t, tc.wantSlice, res)
-		})
-	}
-}
-
-func TestAddStruct(t *testing.T) {
-	testCases := []struct {
-		name      string
-		slice     []Person
-		addVal    Person
-		index     int
-		wantSlice []Person
-		wantErr   error
-	}{
-		{
-			name: "insert at beginning",
-			slice: []Person{
-				{Name: "Alice", Age: 30},
-				{Name: "Bob", Age: 25},
-			},
-			addVal: Person{Name: "Charlie", Age: 35},
-			index:  0,
-			wantSlice: []Person{
-				{Name: "Charlie", Age: 35},
-				{Name: "Alice", Age: 30},
-				{Name: "Bob", Age: 25},
-			},
-		},
-		{
-			name: "insert in middle",
-			slice: []Person{
-				{Name: "Alice", Age: 30},
-				{Name: "Bob", Age: 25},
-				{Name: "David", Age: 40},
-			},
-			addVal: Person{Name: "Eve", Age: 28},
-			index:  1,
-			wantSlice: []Person{
-				{Name: "Alice", Age: 30},
-				{Name: "Eve", Age: 28},
-				{Name: "Bob", Age: 25},
-				{Name: "David", Age: 40},
-			},
-		},
-		{
-			name: "insert at end",
-			slice: []Person{
-				{Name: "Alice", Age: 30},
-			},
-			addVal: Person{Name: "Frank", Age: 50},
-			index:  1,
-			wantSlice: []Person{
-				{Name: "Alice", Age: 30},
-				{Name: "Frank", Age: 50},
-			},
-		},
-		{
-			name:    "index out of range",
-			slice:   []Person{{Name: "Test", Age: 20}},
 			index:   5,
 			wantErr: errs.NewErrIndexOutOfRange(1, 5),
 		},

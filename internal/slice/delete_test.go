@@ -1,4 +1,3 @@
-// Copyright 2026 hanleilei
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,28 +21,28 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAdd(t *testing.T) {
+func TestDelete(t *testing.T) {
 	testCases := []struct {
 		name      string
 		slice     []int
-		addVal    int
 		index     int
 		wantSlice []int
+		wantVal   int
 		wantErr   error
 	}{
 		{
 			name:      "index 0",
 			slice:     []int{123, 100},
-			addVal:    233,
 			index:     0,
-			wantSlice: []int{233, 123, 100},
+			wantSlice: []int{100},
+			wantVal:   123,
 		},
 		{
 			name:      "index middle",
 			slice:     []int{123, 124, 125},
-			addVal:    233,
 			index:     1,
-			wantSlice: []int{123, 233, 124, 125},
+			wantSlice: []int{123, 125},
+			wantVal:   124,
 		},
 		{
 			name:    "index out of range",
@@ -60,67 +59,68 @@ func TestAdd(t *testing.T) {
 		{
 			name:      "index last",
 			slice:     []int{123, 100, 101, 102, 102, 102},
-			addVal:    233,
 			index:     5,
-			wantSlice: []int{123, 100, 101, 102, 102, 233, 102},
+			wantSlice: []int{123, 100, 101, 102, 102},
+			wantVal:   102,
 		},
 		{
-			name:      "append on last",
-			slice:     []int{123, 100, 101, 102, 102, 102},
-			addVal:    233,
-			index:     6,
-			wantSlice: []int{123, 100, 101, 102, 102, 102, 233},
+			name:    "empty slice",
+			slice:   []int{},
+			index:   0,
+			wantErr: errs.NewErrIndexOutOfRange(0, 0),
 		},
 		{
-			name:    "index out of range",
-			slice:   []int{123, 100, 101, 102, 102, 102},
-			addVal:  233,
-			index:   7,
-			wantErr: errs.NewErrIndexOutOfRange(6, 7),
+			name:      "single element",
+			slice:     []int{123},
+			index:     0,
+			wantSlice: []int{},
+			wantVal:   123,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			res, err := Add(tc.slice, tc.addVal, tc.index)
-			assert.Equal(t, tc.wantErr, err)
-			if err != nil {
+			res, val, err := Delete(tc.slice, tc.index)
+			if tc.wantErr != nil {
+				assert.EqualError(t, err, tc.wantErr.Error())
 				return
 			}
+			assert.NoError(t, err)
 			assert.Equal(t, tc.wantSlice, res)
+			assert.Equal(t, tc.wantVal, val)
 		})
 	}
 }
 
-func TestAddString(t *testing.T) {
+func TestDeleteString(t *testing.T) {
 	testCases := []struct {
 		name      string
 		slice     []string
-		addVal    string
 		index     int
 		wantSlice []string
+		wantVal   string
 		wantErr   error
 	}{
 		{
-			name:      "insert at beginning",
+			name:      "delete at beginning",
 			slice:     []string{"hello", "world"},
-			addVal:    "hi",
 			index:     0,
-			wantSlice: []string{"hi", "hello", "world"},
+			wantSlice: []string{"world"},
+			wantVal:   "hello",
 		},
 		{
-			name:      "insert in middle",
+			name:      "delete in middle",
 			slice:     []string{"a", "b", "c"},
-			addVal:    "x",
 			index:     1,
-			wantSlice: []string{"a", "x", "b", "c"},
+			wantSlice: []string{"a", "c"},
+			wantVal:   "b",
 		},
 		{
-			name:      "insert at end",
+			name:      "delete at end",
 			slice:     []string{"foo", "bar"},
-			addVal:    "baz",
-			index:     2,
-			wantSlice: []string{"foo", "bar", "baz"},
+			index:     1,
+			wantSlice: []string{"foo"},
+			wantVal:   "bar",
 		},
 		{
 			name:    "index out of range",
@@ -132,70 +132,60 @@ func TestAddString(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			res, err := Add(tc.slice, tc.addVal, tc.index)
-			assert.Equal(t, tc.wantErr, err)
-			if err != nil {
+			res, val, err := Delete(tc.slice, tc.index)
+			if tc.wantErr != nil {
+				assert.EqualError(t, err, tc.wantErr.Error())
 				return
 			}
+			assert.NoError(t, err)
 			assert.Equal(t, tc.wantSlice, res)
+			assert.Equal(t, tc.wantVal, val)
 		})
 	}
 }
 
-func TestAddStruct(t *testing.T) {
+func TestDeleteStruct(t *testing.T) {
+	alice := testutil.Person{Name: "Alice", Age: 30}
+	bob := testutil.Person{Name: "Bob", Age: 25}
+	david := testutil.Person{Name: "David", Age: 40}
+	test := testutil.Person{Name: "Test", Age: 20}
+
 	testCases := []struct {
 		name      string
 		slice     []testutil.Person
-		addVal    testutil.Person
 		index     int
 		wantSlice []testutil.Person
+		wantVal   testutil.Person
 		wantErr   error
 	}{
 		{
-			name: "insert at beginning",
-			slice: []testutil.Person{
-				{Name: "Alice", Age: 30},
-				{Name: "Bob", Age: 25},
-			},
-			addVal: testutil.Person{Name: "Charlie", Age: 35},
-			index:  0,
-			wantSlice: []testutil.Person{
-				{Name: "Charlie", Age: 35},
-				{Name: "Alice", Age: 30},
-				{Name: "Bob", Age: 25},
-			},
+			name:      "delete at beginning",
+			slice:     []testutil.Person{alice, bob},
+			index:     0,
+			wantSlice: []testutil.Person{bob},
+			wantVal:   alice,
 		},
 		{
-			name: "insert in middle",
+			name: "delete in middle",
 			slice: []testutil.Person{
-				{Name: "Alice", Age: 30},
-				{Name: "Bob", Age: 25},
-				{Name: "David", Age: 40},
+				alice,
+				bob,
+				david,
 			},
-			addVal: testutil.Person{Name: "Eve", Age: 28},
-			index:  1,
-			wantSlice: []testutil.Person{
-				{Name: "Alice", Age: 30},
-				{Name: "Eve", Age: 28},
-				{Name: "Bob", Age: 25},
-				{Name: "David", Age: 40},
-			},
+			index:     1,
+			wantSlice: []testutil.Person{alice, david},
+			wantVal:   bob,
 		},
 		{
-			name: "insert at end",
-			slice: []testutil.Person{
-				{Name: "Alice", Age: 30},
-			},
-			addVal: testutil.Person{Name: "Frank", Age: 50},
-			index:  1,
-			wantSlice: []testutil.Person{
-				{Name: "Alice", Age: 30},
-				{Name: "Frank", Age: 50},
-			},
+			name:      "delete at end",
+			slice:     []testutil.Person{alice},
+			index:     0,
+			wantSlice: []testutil.Person{},
+			wantVal:   alice,
 		},
 		{
 			name:    "index out of range",
-			slice:   []testutil.Person{{Name: "Test", Age: 20}},
+			slice:   []testutil.Person{test},
 			index:   5,
 			wantErr: errs.NewErrIndexOutOfRange(1, 5),
 		},
@@ -203,12 +193,14 @@ func TestAddStruct(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			res, err := Add(tc.slice, tc.addVal, tc.index)
-			assert.Equal(t, tc.wantErr, err)
-			if err != nil {
+			res, val, err := Delete(tc.slice, tc.index)
+			if tc.wantErr != nil {
+				assert.EqualError(t, err, tc.wantErr.Error())
 				return
 			}
+			assert.NoError(t, err)
 			assert.Equal(t, tc.wantSlice, res)
+			assert.Equal(t, tc.wantVal, val)
 		})
 	}
 }
